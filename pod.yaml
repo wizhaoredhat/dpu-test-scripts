@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: default
+  name: my-pod
+  annotations:
+     k8s.v1.cni.cncf.io/networks: dpusriovcni-conf
+spec:
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+  securityContext:
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+  - name: my-pod
+    image: quay.io/wizhao/ft-base-image:0.9
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        intel.com/intel_sriov: '1'
+      limits:
+        intel.com/intel_sriov: '1'
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
