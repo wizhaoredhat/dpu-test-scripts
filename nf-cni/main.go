@@ -20,7 +20,6 @@ import (
 // NetConf extends types.NetConf for dpu-sriov-cni
 type NetConf struct {
 	types.NetConf
-	Tmp      string
 	DeviceID string `json:"deviceID"` // PCI address of a VF in valid sysfs format
 	LogLevel string `json:"logLevel,omitempty"`
 	LogFile  string `json:"logFile,omitempty"`
@@ -56,6 +55,24 @@ func parseNetConf(bytes []byte) (*NetConf, error) {
 	return conf, nil
 }
 
+func setDevTempName(dev netlink.Link) (netlink.Link, error) {
+	// Generate a temp name with the interface index
+	tempName := fmt.Sprintf("%s%d", "temp_", dev.Attrs().Index)
+
+	// Rename to tempName
+	if err := netlink.LinkSetName(dev, tempName); err != nil {
+		return nil, fmt.Errorf("failed to rename device %q to %q: %v", dev.Attrs().Name, tempName, err)
+	}
+
+	// Get updated Link obj
+	tempDev, err := netlink.LinkByName(tempName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find %q after rename to %q: %v", dev.Attrs().Name, tempName, err)
+	}
+
+	return tempDev, nil
+}
+
 func moveLinkInNetNamespace(hostDev netlink.Link, containerNs ns.NetNS, ifName string) (netlink.Link, error) {
 	fp, _ := os.OpenFile("/tmp/cni_debug", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	defer fp.Close()
@@ -86,23 +103,10 @@ func moveLinkInNetNamespace(hostDev netlink.Link, containerNs ns.NetNS, ifName s
 		}
 	}()
 
-	// Generate a temp name with the interface index
-	tempName := fmt.Sprintf("%s%d", "temp_", hostDev.Attrs().Index)
-
-	// Rename to tempName
-	if err := netlink.LinkSetName(hostDev, tempName); err != nil {
-		return nil, fmt.Errorf("failed to rename device %s to %s: %v", hostDev.Attrs().Name, tempName, err)
-	}
-	fmt.Fprintf(fp, "WZ DEBUG Rename link %s to %s\n", hostDev.Attrs().Name, tempName)
-
-	// Get updated Link obj
-	tempDev, err := netlink.LinkByName(tempName)
+	hostDev, err = setDevTempName(hostDev)
 	if err != nil {
-		return nil, fmt.Errorf("failed to find %s after rename to %s: %v", hostDev.Attrs().Name, tempName, err)
+		return nil, fmt.Errorf("failed to rename device %s to temporary name: %v", origHostDevName, err)
 	}
-
-	// Replace the link object of the renamed interface
-	hostDev = tempDev
 
 	// Restore original netdev name in case of error
 	defer func() {
@@ -180,6 +184,91 @@ func moveLinkInNetNamespace(hostDev netlink.Link, containerNs ns.NetNS, ifName s
 	}
 
 	return contDev, nil
+}
+
+func moveLinkOutToHost(containerNs ns.NetNS, ifName string) error {
+	fp, _ := os.OpenFile("/tmp/cni_debug", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	defer fp.Close()
+
+	// Get the default namespace from the host
+	defaultHostNs, err := ns.GetCurrentNS()
+	if err != nil {
+		return err
+	}
+	defer defaultHostNs.Close()
+	fmt.Fprintf(fp, "WZ DEBUG DELETE defaultHostNs = %+v\n", defaultHostNs)
+
+	var tempName string
+	var origDev netlink.Link
+	err = containerNs.Do(func(_ ns.NetNS) error {
+		dev, err := netlink.LinkByName(ifName)
+		if err != nil {
+			return fmt.Errorf("failed to find %s: %v", ifName, err)
+		}
+		origDev = dev
+
+		// Devices can be renamed only when down
+		if err = netlink.LinkSetDown(dev); err != nil {
+			return fmt.Errorf("failed to set %s down: %v", ifName, err)
+		}
+
+		defer func() {
+			// If moving the device to the host namespace fails, set its name back to ifName so that this
+			// function can be retried. Also bring the device back up, unless it was already down before.
+			if err != nil {
+				_ = netlink.LinkSetName(dev, ifName)
+				if dev.Attrs().Flags&net.FlagUp == net.FlagUp {
+					_ = netlink.LinkSetUp(dev)
+				}
+			}
+		}()
+
+		newLink, err := setDevTempName(dev)
+		if err != nil {
+			return fmt.Errorf("failed to rename device %s to temporary name: %v", ifName, err)
+		}
+		dev = newLink
+		tempName = dev.Attrs().Name
+
+		fmt.Fprintf(fp, "WZ DEBUG DELETE name = %s , tempName = %s\n", ifName, tempName)
+
+		if err = netlink.LinkSetNsFd(dev, int(defaultHostNs.Fd())); err != nil {
+			return fmt.Errorf("failed to move %s to host netns: %v", tempName, err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	// Rename the device to its original name from the host namespace
+	tempDev, err := netlink.LinkByName(tempName)
+	if err != nil {
+		return fmt.Errorf("failed to find %s in host namespace: %v", tempName, err)
+	}
+
+	// Use the device's alias to do this.
+	if err = netlink.LinkSetName(tempDev, tempDev.Attrs().Alias); err != nil {
+		// Move device back to container ns so it may be retired
+		defer func() {
+			_ = netlink.LinkSetNsFd(tempDev, int(containerNs.Fd()))
+			_ = containerNs.Do(func(_ ns.NetNS) error {
+				lnk, err := netlink.LinkByName(tempName)
+				if err != nil {
+					return err
+				}
+				_ = netlink.LinkSetName(lnk, ifName)
+				if origDev.Attrs().Flags&net.FlagUp == net.FlagUp {
+					_ = netlink.LinkSetUp(lnk)
+				}
+				return nil
+			})
+		}()
+		return fmt.Errorf("failed to restore %s to original name %s: %v", tempName, tempDev.Attrs().Alias, err)
+	}
+
+	return nil
 }
 
 func cmdAdd(args *skel.CmdArgs) error {
@@ -269,6 +358,35 @@ func cmdAdd(args *skel.CmdArgs) error {
 }
 
 func cmdDel(args *skel.CmdArgs) error {
+	fp, _ := os.OpenFile("/tmp/cni_debug", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	defer fp.Close()
+
+	conf, err := parseNetConf(args.StdinData)
+	if err != nil {
+		return err
+	}
+
+	if args.Netns == "" {
+		return nil
+	}
+
+	containerNs, err := ns.GetNS(args.Netns)
+	if err != nil {
+		return fmt.Errorf("failed to open netns %q: %v", args.Netns, err)
+	}
+	defer containerNs.Close()
+	fmt.Fprintf(fp, "WZ DEBUG DELETE args.Netns = %+v\n", args.Netns)
+
+	if conf.IPAM.Type != "" {
+		if err := ipam.ExecDel(conf.IPAM.Type, args.StdinData); err != nil {
+			return err
+		}
+	}
+
+	if err := moveLinkOutToHost(containerNs, args.IfName); err != nil {
+		return err
+	}
+
 	return nil
 }
 
