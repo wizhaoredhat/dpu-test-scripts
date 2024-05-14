@@ -1,0 +1,397 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-1
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-1
+spec:
+  containers:
+  - name: ft-iperf-server-pod-1
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-145
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-2
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-2
+spec:
+  containers:
+  - name: ft-iperf-server-pod-2
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-145
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-3
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-3
+spec:
+  containers:
+  - name: ft-iperf-server-pod-3
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-145
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-4
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-4
+spec:
+  containers:
+  - name: ft-iperf-server-pod-4
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-145
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-client-pod-1
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-client-pod-1
+spec:
+  containers:
+  - name: ft-iperf-client-pod-1
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-146
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-client-pod-2
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-client-pod-2
+spec:
+  containers:
+  - name: ft-iperf-client-pod-2
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-146
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-client-pod-3
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-client-pod-3
+spec:
+  containers:
+  - name: ft-iperf-client-pod-3
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-146
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-client-pod-4
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-client-pod-4
+spec:
+  containers:
+  - name: ft-iperf-client-pod-4
+    image: quay.io/wizhao/vz-tools:0.4-x86_64
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-146
+
+
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetwork
+metadata:
+  name: sriovnet
+  namespace: openshift-sriov-network-operator
+spec:
+  resourceName: mlxnics
+  ipam: |-
+    { "type": "whereabouts",
+       "range": "1.1.1.1/24",
+       "exclude": [
+         "1.1.1.1/32",
+         "1.1.1.2/32"
+       ]
+    }
+
+cat sriov_pod1.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-1
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-1
+spec:
+  containers:
+  - name: ft-iperf-server-pod-1
+    image: quay.io/wizhao/ft-base-image:0.9
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-145
+
+cat sriov_pod2.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ft-iperf-server-pod-2
+  namespace: default
+  annotations:
+    v1.multus-cni.io/default-network: openshift-sriov-network-operator/sriovnet
+  labels:
+    pod-name: ft-iperf-server-pod-2
+spec:
+  containers:
+  - name: ft-iperf-server-pod-2
+    image: quay.io/wizhao/ft-base-image:0.9
+    command:
+      - "/sbin/init"
+    imagePullPolicy: IfNotPresent
+    resources:
+      requests:
+        openshift.io/mlxnics: '1'
+      limits:
+        openshift.io/mlxnics: '1'
+  nodeSelector:
+    kubernetes.io/hostname: worker-146
+
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: policy-mlx
+  namespace: openshift-sriov-network-operator
+spec:
+  deviceType: netdevice
+  nicSelector:
+    deviceID: "101d"
+    vendor: "15b3"
+    rootDevices:
+    - 0000:98:00.0
+  nodeSelector:
+    feature.node.kubernetes.io/network-sriov.capable: "true"
+  numVfs: 5
+  priority: 5
+  resourceName: mlxnics
+
+cat cluster.yaml
+clusters:
+  - name : "cxcluster"
+    api_vip: "192.168.122.99"
+    ingress_vip: "192.168.122.101"
+    kubeconfig: "/root/kubeconfig.cxcluster"
+    version: "4.12.0-nightly"
+    cluster_ip_range: "192.168.122.1-192.168.255.254"
+    ip_range: "192.168.122.1-192.168.122.254"
+    ip_mask: "255.255.255.0"
+    network_api_port: "{{api_network()}}"
+    postconfig:
+    - name: "sriov_network_operator_subscription"
+    masters:
+    - name: "cxcluster-master-1"
+      type: "vm"
+      node: "localhost"
+      ip: "192.168.122.2"
+    - name: "cxcluster-master-2"
+      type: "vm"
+      node: "localhost"
+      ip: "192.168.122.3"
+    - name: "cxcluster-master-3"
+      type: "vm"
+      node: "localhost"
+      ip: "192.168.122.4"
+    workers:
+    - name: "worker-{{worker_number(0)}}"
+      type: "physical"
+      node: "{{worker_name(0)}}"
+      bmc_user: "root"
+      bmc_password: "calvin"
+      bmc: "{{bmc(0)}}"
+    - name: "worker-{{worker_number(1)}}"
+      type: "physical"
+      node: "{{worker_name(1)}}"
+      bmc_user: "root"
+      bmc_password: "calvin"
+      bmc: "{{bmc(1)}}"
+
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: performance-tuned-f5-worker
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+  - data: |
+      [main]
+      summary=Configuration changes profile inherited from performance created tuned
+      [net]
+      nf_conntrack_hashsize=524288
+      [sysctl]
+      net.netfilter.nf_conntrack_max=2097152
+      net.ipv4.tcp_tw_reuse=1
+      net.netfilter.nf_conntrack_tcp_timeout_time_wait=1
+      [scheduler]
+      group.ksoftirqd=0:f:11:*:ksoftirqd.*
+      group.rcuc=0:f:11:*:rcuc.*
+      group.rcub=0:f:11:*:rcub.*
+    name: performance-tuned-f5-worker
+  recommend:
+  - machineConfigLabels:
+      machineconfiguration.openshift.io/role: worker
+    priority: 19
+    profile: performance-tuned-f5-worker
+
+
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 100-f5-worker
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+  kernelArguments:
+      - skew_tick=1
+      - tsc=reliable
+      - rcupdate.rcu_normal_after_boot=1
+      - nohz=on
+      - rcu_nocbs=2-23,32-55
+      - tuned.non_isolcpus=ff000000,ff000003
+      - systemd.cpu_affinity=0,1,56,58,59,57,60,63,61,62,24,25,26,27,28,29,30,31
+      - intel_iommu=on
+      - iommu=pt
+      - isolcpus=managed_irq,2-23,32-55
+      - tsc=nowatchdog
+      - nosoftlockup
+      - nmi_watchdog=0
+      - mce=off
+      - rcutree.kthread_prio=11
+      - default_hugepagesz=2M
+      - intel_pstate=disable
+      - pci=realloc
+
+
+
+oc label nodes worker-009 feature.node.kubernetes.io/network-sriov.capable=true
+oc label nodes worker-010 feature.node.kubernetes.io/network-sriov.capable=true
+
+apiVersion: sriovnetwork.openshift.io/v1
+kind: SriovNetworkNodePolicy
+metadata:
+  name: policy-cx-6-dx-mlx
+  namespace: openshift-sriov-network-operator
+spec:
+  deviceType: netdevice
+  nicSelector:
+    deviceID: "101d"
+    vendor: "15b3"
+    rootDevices:
+    - 0000:a0:00.0
+  nodeSelector:
+    feature.node.kubernetes.io/network-sriov.capable: "true"
+  numVfs: 5
+  priority: 5
+  resourceName: mlxnics
